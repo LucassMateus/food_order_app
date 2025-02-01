@@ -15,8 +15,8 @@ List<SingleChildWidget> providers = [
   Provider<ItemRepository>(create: (_) => ItemRepositoryImpl()),
   Provider<CartRepository>(create: (_) => CartRepositoryImpl()),
   Provider<PromoCodeRepository>(create: (_) => PromoCodeRepositoryImpl()),
-  Provider<GetCartSummaryModelUseCase>(
-    create: (context) => GetCartSummaryModelUseCase(
+  Provider<GetCartSummaryUseCase>(
+    create: (context) => GetCartSummaryUseCase(
       promoCodeRepository: context.read(),
     ),
   ),

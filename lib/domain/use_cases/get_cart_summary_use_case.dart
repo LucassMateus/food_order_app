@@ -4,11 +4,11 @@ import 'package:food_order_app/domain/models/cart_model.dart';
 import 'package:food_order_app/domain/models/cart_summary_model.dart';
 import 'package:food_order_app/domain/repositories/promo_code_repository.dart';
 
-class GetCartSummaryModelUseCase {
+class GetCartSummaryUseCase {
   @protected
   final PromoCodeRepository promoCodeRepository;
 
-  GetCartSummaryModelUseCase({required this.promoCodeRepository});
+  GetCartSummaryUseCase({required this.promoCodeRepository});
 
   Future<CartSummaryModel> call(CartModel cart) async {
     //TODO: Check promo code

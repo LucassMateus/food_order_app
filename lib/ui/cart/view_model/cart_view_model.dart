@@ -16,7 +16,7 @@ class CartViewModel extends ChangeNotifier {
   final CartRepository cartRepository;
 
   @protected
-  final GetCartSummaryModelUseCase getCartSummaryModelUseCase;
+  final GetCartSummaryUseCase getCartSummaryModelUseCase;
 
   final CartModel cart = CartModel();
   CartSummaryModel cartSummaryModel = CartSummaryModel(
