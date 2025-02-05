@@ -1,4 +1,5 @@
 import 'package:food_order_app/domain/models/cart_item_model.dart';
+import 'package:food_order_app/domain/models/cart_model.dart';
 import 'package:food_order_app/domain/models/item_model.dart';
 
 abstract interface class CartRepository {
@@ -14,5 +15,5 @@ abstract interface class CartRepository {
 
   Future<void> checkout();
 
-  Future<void> updatePromoCode(String? promoCode);
+  Future<void> updateCart(CartModel cart);
 }

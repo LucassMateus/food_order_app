@@ -114,24 +114,36 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             Expanded(
-              child: SingleChildScrollView(
-                child: ListenableBuilder(
-                    listenable: viewModel,
-                    builder: (context, _) {
+              child: ListenableBuilder(
+                  listenable: viewModel,
+                  builder: (context, _) {
+                    if (viewModel.isLoading) {
                       return Column(
-                        children: viewModel.items
-                            .map((item) => FoodItemCard(
-                                  item: item,
-                                  initialCounterQuantity:
-                                      viewModel.getItemQuantityInCart(item),
-                                  onDecrement:
-                                      viewModel.updateOrRemoveItemFromCart,
-                                  onIncrement: viewModel.addOrUpdateItemInCart,
-                                ))
-                            .toList(),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Center(child: CircularProgressIndicator()),
+                        ],
                       );
-                    }),
-              ),
+                    }
+                    if (viewModel.isLoaded) {
+                      return SingleChildScrollView(
+                        child: Column(
+                          children: viewModel.items
+                              .map((item) => FoodItemCard(
+                                    item: item,
+                                    initialCounterQuantity:
+                                        viewModel.getItemQuantityInCart(item),
+                                    onDecrement:
+                                        viewModel.updateOrRemoveItemFromCart,
+                                    onIncrement:
+                                        viewModel.addOrUpdateItemInCart,
+                                  ))
+                              .toList(),
+                        ),
+                      );
+                    }
+                    return SizedBox();
+                  }),
             )
           ],
         ),

@@ -41,46 +41,61 @@ class _CartScreenState extends State<CartScreen> {
       body: ListenableBuilder(
         listenable: viewModel,
         builder: (context, _) {
-          return SingleChildScrollView(
-            child: Column(
-              children: viewModel.cart.items.map((e) {
-                return CartFoodItemCard(
-                  cartItemModel: e,
-                  onIncrement: viewModel.updateItemInCart,
-                  onDecrement: viewModel.updateItemInCart,
-                );
-              }).toList(),
-            ),
-          );
+          if (viewModel.isLoading) {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Center(child: CircularProgressIndicator()),
+              ],
+            );
+          }
+
+          if (viewModel.isLoaded) {
+            return SingleChildScrollView(
+              child: Column(children: [
+                ...viewModel.cart.items.map((e) {
+                  return CartFoodItemCard(
+                    cartItemModel: e,
+                    onIncrement: viewModel.updateItemInCart,
+                    onDecrement: viewModel.updateItemInCart,
+                  );
+                }),
+                Padding(padding: EdgeInsets.only(bottom: 300)),
+              ]),
+            );
+          }
+          return const SizedBox();
         },
       ),
-      bottomSheet: Container(
-        height: 300,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.5),
-              spreadRadius: 5,
-              blurRadius: 7,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: ListenableBuilder(
-            listenable: viewModel,
-            builder: (context, _) {
-              return Padding(
+      bottomSheet: ListenableBuilder(
+          listenable: viewModel,
+          builder: (context, _) {
+            if (!viewModel.isLoaded) return const SizedBox();
+
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.5),
+                    spreadRadius: 5,
+                    blurRadius: 7,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     PromoCodeField(
                       onApply: (code) => viewModel.applyPromoCode(code),
-                      initialValue: viewModel.cart.promoCode,
+                      initialValue: viewModel.cart.promoCode?.code,
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -95,24 +110,9 @@ class _CartScreenState extends State<CartScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('Promo Code Discount:'),
-                        Text(viewModel.cartSummaryModel.promoCodeDiscount
-                            .toCurrency()),
-                      ],
-                    ),
-                    Divider(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Delivery:'),
-                        Text(viewModel.cartSummaryModel.delivery.toCurrency()),
-                      ],
-                    ),
-                    Divider(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Total:'),
-                        Text(viewModel.cartSummaryModel.total.toCurrency()),
+                        Text(
+                          viewModel.cart.promoCode?.discount.toCurrency() ?? '',
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -120,7 +120,10 @@ class _CartScreenState extends State<CartScreen> {
                       width: double.infinity,
                       height: 48,
                       child: OutlinedButton(
-                        onPressed: () {},
+                        onPressed: () => Navigator.of(context).pushNamed(
+                          '/checkout',
+                          arguments: viewModel.cart,
+                        ),
                         style: OutlinedButton.styleFrom(
                           backgroundColor: context.colors.primary,
                           shape: RoundedRectangleBorder(
@@ -138,9 +141,9 @@ class _CartScreenState extends State<CartScreen> {
                     )
                   ],
                 ),
-              );
-            }),
-      ),
+              ),
+            );
+          }),
     );
   }
 }

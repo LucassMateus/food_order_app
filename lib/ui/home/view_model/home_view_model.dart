@@ -5,6 +5,7 @@ import 'package:food_order_app/domain/models/item_model.dart';
 import 'package:food_order_app/domain/repositories/cart_repository.dart';
 
 import 'package:food_order_app/domain/repositories/item_repository.dart';
+import 'package:food_order_app/ui/home/state/home_screen_state.dart';
 
 class HomeViewModel extends ChangeNotifier {
   HomeViewModel({required this.itemRepository, required this.cartRepository});
@@ -14,6 +15,10 @@ class HomeViewModel extends ChangeNotifier {
   @protected
   final CartRepository cartRepository;
 
+  HomeScreenState _state = HomeScreenState.initial;
+  bool get isLoading => _state == HomeScreenState.loading;
+  bool get isLoaded => _state == HomeScreenState.loaded;
+
   final items = <ItemModel>[];
   final CartModel cart = CartModel();
 
@@ -22,9 +27,16 @@ class HomeViewModel extends ChangeNotifier {
       .fold(0, (previousValue, element) => previousValue + element.quantity);
 
   Future<void> init() async {
+    updateState(HomeScreenState.loading);
+    await Future.delayed(Duration(seconds: 1));
     await getItems();
-    await updateCartItemModels();
+    await updateCartItems();
 
+    updateState(HomeScreenState.loaded);
+  }
+
+  void updateState(HomeScreenState newState) {
+    _state = newState;
     notifyListeners();
   }
 
@@ -33,7 +45,7 @@ class HomeViewModel extends ChangeNotifier {
     items.addAll(result);
   }
 
-  Future<void> updateCartItemModels() async {
+  Future<void> updateCartItems() async {
     cart.items.clear();
 
     final result = await cartRepository.getItems();
@@ -41,15 +53,15 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Future<void> updateCartAndNotifyListeners() async {
-    await updateCartItemModels();
+    await updateCartItems();
     notifyListeners();
   }
 
   void updateCartAfterReturningFromCartScreen(Set<CartItemModel> items) {
+    updateState(HomeScreenState.loading);
     cart.items.clear();
     cart.items.addAll(items);
-
-    notifyListeners();
+    updateState(HomeScreenState.loaded);
   }
 
   Future<void> addOrUpdateItemInCart(ItemModel item, int quantity) async {

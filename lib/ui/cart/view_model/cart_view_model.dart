@@ -1,32 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:food_order_app/domain/models/cart_item_model.dart';
 import 'package:food_order_app/domain/models/cart_model.dart';
-import 'package:food_order_app/domain/models/cart_summary_model.dart';
 import 'package:food_order_app/domain/models/item_model.dart';
 import 'package:food_order_app/domain/repositories/cart_repository.dart';
-import 'package:food_order_app/domain/use_cases/get_cart_summary_use_case.dart';
+import 'package:food_order_app/domain/repositories/promo_code_repository.dart';
+import 'package:food_order_app/ui/cart/state/cart_screen_state.dart';
 
 class CartViewModel extends ChangeNotifier {
-  CartViewModel({
-    required this.cartRepository,
-    required this.getCartSummaryModelUseCase,
-  });
+  CartViewModel(
+      {required this.cartRepository, required this.promoCodeRepository});
 
   @protected
   final CartRepository cartRepository;
 
   @protected
-  final GetCartSummaryUseCase getCartSummaryModelUseCase;
+  final PromoCodeRepository promoCodeRepository;
+
+  CartScreenState _state = CartScreenState.initial;
+  bool get isLoading => _state == CartScreenState.loading;
+  bool get isLoaded => _state == CartScreenState.loaded;
 
   final CartModel cart = CartModel();
-  CartSummaryModel cartSummaryModel = CartSummaryModel(
-    subTotal: 0,
-    promoCodeDiscount: 0,
-    delivery: 0,
-  );
 
   Future<void> init() async {
-    await _updateCartAndNotifyListeners();
+    updateState(CartScreenState.loading);
+
+    await Future.delayed(Duration(seconds: 1));
+    await updateCart();
+
+    updateState(CartScreenState.loaded);
+  }
+
+  void updateState(CartScreenState newState) {
+    _state = newState;
+    notifyListeners();
   }
 
   Future<void> updateCart() async {
@@ -35,21 +42,25 @@ class CartViewModel extends ChangeNotifier {
     cart.items.addAll(result);
   }
 
-  Future<void> updateSummary() async {
-    cartSummaryModel = await getCartSummaryModelUseCase(cart);
-  }
+  Future<void> applyPromoCode(String? code) async {
+    if (code == null) {
+      return;
+    }
 
-  Future<void> applyPromoCode(String? promoCode) async {
-    cart.promoCode = promoCode ?? '';
-    await cartRepository.updatePromoCode(promoCode);
-    await updateSummary();
+    final promoCode = await promoCodeRepository.getPromoCode(code);
+
+    if (promoCode == null) {
+      throw Exception('Invalid promo code');
+    }
+
+    cart.applyPromoCode(promoCode);
+    await cartRepository.updateCart(cart);
 
     notifyListeners();
   }
 
   Future<void> _updateCartAndNotifyListeners() async {
     await updateCart();
-    await updateSummary();
     notifyListeners();
   }
 
@@ -60,8 +71,9 @@ class CartViewModel extends ChangeNotifier {
         return;
       }
 
-      await cartRepository
-          .updateItem(CartItemModel(item: item, quantity: quantity));
+      await cartRepository.updateItem(
+        CartItemModel(item: item, quantity: quantity),
+      );
     } finally {
       await _updateCartAndNotifyListeners();
     }

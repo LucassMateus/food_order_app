@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:food_order_app/domain/models/item_model.dart';
 import 'package:food_order_app/ui/core/styles/colors_app.dart';
-import 'package:food_order_app/ui/core/styles/text_styles.dart';
 
 class FoodItemCounter extends StatefulWidget {
   const FoodItemCounter({

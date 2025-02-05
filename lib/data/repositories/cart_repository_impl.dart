@@ -1,7 +1,6 @@
 import 'package:food_order_app/domain/models/cart_item_model.dart';
 import 'package:food_order_app/domain/models/cart_model.dart';
 import 'package:food_order_app/domain/models/item_model.dart';
-import 'package:food_order_app/domain/models/promo_code_model.dart';
 import 'package:food_order_app/domain/repositories/cart_repository.dart';
 
 class CartRepositoryImpl implements CartRepository {
@@ -40,7 +39,10 @@ class CartRepositoryImpl implements CartRepository {
   }
 
   @override
-  Future<void> updatePromoCode(String? promoCode) async {
-    cart.promoCode = promoCode ?? '';
+  Future<void> updateCart(CartModel cart) async {
+    cart.copyWith(
+      items: cart.items,
+      promoCode: cart.promoCode,
+    );
   }
 }
