@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:food_order_app/domain/models/cart_item_model.dart';
 import 'package:food_order_app/domain/models/cart_model.dart';
 import 'package:food_order_app/domain/models/item_model.dart';
+import 'package:food_order_app/domain/models/promo_code_model.dart';
 import 'package:food_order_app/domain/repositories/cart_repository.dart';
 import 'package:food_order_app/domain/repositories/promo_code_repository.dart';
 import 'package:food_order_app/ui/cart/state/cart_screen_state.dart';
+import 'package:result_dart/result_dart.dart';
 
 class CartViewModel extends ChangeNotifier {
-  CartViewModel(
-      {required this.cartRepository, required this.promoCodeRepository});
+  CartViewModel({
+    required this.cartRepository,
+    required this.promoCodeRepository,
+  });
 
   @protected
   final CartRepository cartRepository;
@@ -20,15 +24,20 @@ class CartViewModel extends ChangeNotifier {
   bool get isLoading => _state == CartScreenState.loading;
   bool get isLoaded => _state == CartScreenState.loaded;
 
-  final CartModel cart = CartModel();
+  CartModel cart = CartModel.empty();
+
+  String errorMessage = '';
 
   Future<void> init() async {
     updateState(CartScreenState.loading);
 
     await Future.delayed(Duration(seconds: 1));
-    await updateCart();
 
-    updateState(CartScreenState.loaded);
+    await cartRepository //
+        .getCart()
+        .flatMap(updateCart)
+        .onSuccess((_) => updateState(CartScreenState.loaded))
+        .recover(_recover);
   }
 
   void updateState(CartScreenState newState) {
@@ -36,46 +45,55 @@ class CartViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateCart() async {
-    cart.items.clear();
-    final result = await cartRepository.getItems();
-    cart.items.addAll(result);
+  Result<Unit> updateCart(CartModel cart) {
+    this.cart = cart;
+    return Success(unit);
+  }
+
+  Result<Unit> _recover(Exception e) {
+    errorMessage = e.toString();
+    updateState(CartScreenState.error);
+    return Failure(e);
+  }
+
+  Result<Unit> _notifyListenersOnResult(Unit _) {
+    notifyListeners();
+    return Success(unit);
   }
 
   Future<void> applyPromoCode(String? code) async {
     if (code == null) {
+      cart.removePromoCode();
+      notifyListeners();
       return;
     }
 
-    final promoCode = await promoCodeRepository.getPromoCode(code);
-
-    if (promoCode == null) {
-      throw Exception('Invalid promo code');
-    }
-
-    cart.applyPromoCode(promoCode);
-    await cartRepository.updateCart(cart);
-
-    notifyListeners();
+    await promoCodeRepository
+        .getPromoCode(code)
+        .flatMap(_updateCartPromoCode)
+        .onSuccess(_notifyListenersOnResult)
+        .recover(_recover);
   }
 
-  Future<void> _updateCartAndNotifyListeners() async {
-    await updateCart();
-    notifyListeners();
+  AsyncResult<Unit> _updateCartPromoCode(PromoCodeModel promoCode) {
+    cart.applyPromoCode(promoCode);
+    return cartRepository.updateCart(cart);
   }
 
   Future<void> updateItemInCart(ItemModel item, int quantity) async {
-    try {
-      if (quantity == 0) {
-        await cartRepository.removeItem(item);
-        return;
-      }
+    final cartItem = CartItemModel(item: item, quantity: quantity);
 
-      await cartRepository.updateItem(
-        CartItemModel(item: item, quantity: quantity),
-      );
-    } finally {
-      await _updateCartAndNotifyListeners();
+    if (quantity == 0) {
+      cart.items.remove(cartItem);
+    } else {
+      cart.items //
+          .firstWhere((e) => e.item == item)
+          .quantity = quantity;
     }
+
+    await cartRepository
+        .updateCart(cart)
+        .onSuccess(_notifyListenersOnResult)
+        .recover(_recover);
   }
 }

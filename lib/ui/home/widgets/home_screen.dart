@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:food_order_app/domain/enums/food_category.dart';
-import 'package:food_order_app/domain/models/cart_item_model.dart';
+import 'package:food_order_app/domain/models/cart_model.dart';
 import 'package:food_order_app/ui/core/styles/colors_app.dart';
 import 'package:food_order_app/ui/core/styles/text_styles.dart';
 import 'package:food_order_app/ui/home/view_model/home_view_model.dart';
@@ -27,8 +27,24 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      viewModel.addListener(_listener);
       viewModel.init();
     });
+  }
+
+  @override
+  void dispose() {
+    viewModel.removeListener(_listener);
+    super.dispose();
+  }
+
+  void _listener() {
+    if (viewModel.hasError) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(viewModel.errorMessage),
+        backgroundColor: Colors.red,
+      ));
+    }
   }
 
   @override
@@ -67,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               return FilledButton(
                                 onPressed: () async {
                                   final result = await Navigator.of(context)
-                                      .pushNamed<Set<CartItemModel>>('/cart');
+                                      .pushNamed<CartModel>('/cart');
 
                                   if (result != null) {
                                     viewModel

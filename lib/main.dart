@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:food_order_app/config/dependencies.dart';
-import 'package:food_order_app/domain/models/cart_item_model.dart';
+import 'package:food_order_app/domain/models/cart_model.dart';
 import 'package:food_order_app/ui/cart/widgets/cart_screen.dart';
 import 'package:food_order_app/ui/checkout/widgets/checkout_screen.dart';
 import 'package:food_order_app/ui/core/theme/theme_config.dart';
@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
             );
           }
           if (settings.name == '/cart') {
-            return MaterialPageRoute<Set<CartItemModel>>(
+            return MaterialPageRoute<CartModel>(
               builder: (context) => CartScreen(
                 viewModel: context.read(),
               ),

@@ -6,6 +6,7 @@ import 'package:food_order_app/domain/repositories/cart_repository.dart';
 
 import 'package:food_order_app/domain/repositories/item_repository.dart';
 import 'package:food_order_app/ui/home/state/home_screen_state.dart';
+import 'package:result_dart/result_dart.dart';
 
 class HomeViewModel extends ChangeNotifier {
   HomeViewModel({required this.itemRepository, required this.cartRepository});
@@ -15,7 +16,11 @@ class HomeViewModel extends ChangeNotifier {
   @protected
   final CartRepository cartRepository;
 
+  String errorMessage = '';
   HomeScreenState _state = HomeScreenState.initial;
+
+  bool get hasError =>
+      _state == HomeScreenState.error || errorMessage.isNotEmpty;
   bool get isLoading => _state == HomeScreenState.loading;
   bool get isLoaded => _state == HomeScreenState.loaded;
 
@@ -28,11 +33,35 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<void> init() async {
     updateState(HomeScreenState.loading);
+
     await Future.delayed(Duration(seconds: 1));
-    await getItems();
-    await updateCartItems();
+
+    await itemRepository //
+        .getItems()
+        .flatMap(_setItems)
+        .flatMap((_) async => await cartRepository.getCart())
+        .flatMap(_updateCart)
+        .onSuccess((_) => updateState(HomeScreenState.loaded))
+        .recover(_recover);
 
     updateState(HomeScreenState.loaded);
+  }
+
+  Result<Unit> _recover(Exception e) {
+    errorMessage = e.toString();
+    updateState(HomeScreenState.error);
+    return Failure(e);
+  }
+
+  Result<Unit> _setItems(List<ItemModel> items) {
+    this.items.clear();
+    this.items.addAll(items);
+    return Success.unit();
+  }
+
+  Result<Unit> _updateCart(CartModel cart) {
+    this.cart.copyWith(items: cart.items);
+    return Success.unit();
   }
 
   void updateState(HomeScreenState newState) {
@@ -40,56 +69,61 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> getItems() async {
-    final result = await itemRepository.getItems();
-    items.addAll(result);
-  }
-
-  Future<void> updateCartItems() async {
-    cart.items.clear();
-
-    final result = await cartRepository.getItems();
-    cart.items.addAll(result);
-  }
-
   Future<void> updateCartAndNotifyListeners() async {
-    await updateCartItems();
-    notifyListeners();
+    await cartRepository //
+        .getCart()
+        .flatMap(_updateCart)
+        .onSuccess((_) => notifyListeners());
   }
 
-  void updateCartAfterReturningFromCartScreen(Set<CartItemModel> items) {
+  void updateCartAfterReturningFromCartScreen(CartModel cart) {
     updateState(HomeScreenState.loading);
-    cart.items.clear();
-    cart.items.addAll(items);
+    _updateCart(cart);
     updateState(HomeScreenState.loaded);
   }
 
   Future<void> addOrUpdateItemInCart(ItemModel item, int quantity) async {
-    final cartItemModel = cart.items.firstWhere(
-      (element) => element.item.id == item.id,
-      orElse: () => CartItemModel(item: item, quantity: 0),
-    );
+    final cartItem = CartItemModel(item: item, quantity: quantity);
 
-    if (cartItemModel.quantity == 0) {
-      final newItem = cartItemModel.copyWith(quantity: quantity);
-      await cartRepository.addItem(newItem);
+    if (cart.items.contains(cartItem)) {
+      cart.items //
+          .firstWhere((e) => e == cartItem)
+          .quantity = quantity;
     } else {
-      final updatedCartItemModel = cartItemModel.copyWith(quantity: quantity);
-      await cartRepository.updateItem(updatedCartItemModel);
+      cart.items.add(cartItem);
     }
 
-    await updateCartAndNotifyListeners();
+    await cartRepository //
+        .updateCart(cart)
+        .fold(
+      (success) async => await updateCartAndNotifyListeners(),
+      (error) {
+        errorMessage = error.toString();
+        updateState(HomeScreenState.error);
+      },
+    );
   }
 
   Future<void> updateOrRemoveItemFromCart(ItemModel item, int quantity) async {
+    final cartItem = CartItemModel(item: item, quantity: quantity);
+
     if (quantity == 0) {
-      await cartRepository.removeItem(item);
+      cart.items.remove(cartItem);
     } else {
-      final cartItemModel = CartItemModel(item: item, quantity: quantity);
-      await cartRepository.updateItem(cartItemModel);
+      cart.items //
+          .firstWhere((e) => e == cartItem)
+          .quantity = quantity;
     }
 
-    await updateCartAndNotifyListeners();
+    await cartRepository //
+        .updateCart(cart)
+        .fold(
+      (success) async => await updateCartAndNotifyListeners(),
+      (error) {
+        errorMessage = error.toString();
+        updateState(HomeScreenState.error);
+      },
+    );
   }
 
   int getItemQuantityInCart(ItemModel item) {

@@ -23,6 +23,10 @@ class CartModel {
     this.promoCode = promoCode;
   }
 
+  void removePromoCode() {
+    promoCode = null;
+  }
+
   CartModel copyWith({
     Set<CartItemModel>? items,
     PromoCodeModel? promoCode,

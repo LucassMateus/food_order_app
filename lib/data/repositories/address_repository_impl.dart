@@ -1,5 +1,6 @@
 import 'package:food_order_app/domain/models/address_model.dart';
 import 'package:food_order_app/domain/repositories/address_repository.dart';
+import 'package:result_dart/result_dart.dart';
 
 class AddressRepositoryImpl implements AddressRepository {
   static const _addres = [
@@ -22,5 +23,5 @@ class AddressRepositoryImpl implements AddressRepository {
   ];
 
   @override
-  Future<List<AddressModel>> getAll() async => _addres;
+  AsyncResult<List<AddressModel>> getAll() async => Success(_addres);
 }

@@ -1,19 +1,15 @@
 import 'package:food_order_app/domain/models/cart_item_model.dart';
 import 'package:food_order_app/domain/models/cart_model.dart';
-import 'package:food_order_app/domain/models/item_model.dart';
+import 'package:result_dart/result_dart.dart';
 
 abstract interface class CartRepository {
-  Future<void> addItem(CartItemModel item);
+  AsyncResult<CartModel> getCart();
 
-  Future<void> removeItem(ItemModel item);
+  AsyncResult<List<CartItemModel>> getItems();
 
-  Future<void> updateItem(CartItemModel item);
+  AsyncResult<Unit> clearCart();
 
-  Future<List<CartItemModel>> getItems();
+  AsyncResult<Unit> checkout();
 
-  Future<void> clearCart();
-
-  Future<void> checkout();
-
-  Future<void> updateCart(CartModel cart);
+  AsyncResult<Unit> updateCart(CartModel cart);
 }

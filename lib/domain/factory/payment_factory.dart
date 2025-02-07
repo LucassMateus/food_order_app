@@ -1,10 +1,10 @@
 import 'package:food_order_app/domain/enums/payment_type.dart';
-import 'package:food_order_app/domain/models/payments/apple_pay_payment.dart';
-import 'package:food_order_app/domain/models/payments/cash_payment.dart';
-import 'package:food_order_app/domain/models/payments/credit_card_payment.dart';
-import 'package:food_order_app/domain/models/payments/google_pay_payment.dart';
-import 'package:food_order_app/domain/models/payments/payment.dart';
-import 'package:food_order_app/domain/models/payments/paypal_payment.dart';
+import 'package:food_order_app/domain/payments/apple_pay_payment.dart';
+import 'package:food_order_app/domain/payments/cash_payment.dart';
+import 'package:food_order_app/domain/payments/credit_card_payment.dart';
+import 'package:food_order_app/domain/payments/google_pay_payment.dart';
+import 'package:food_order_app/domain/payments/payment.dart';
+import 'package:food_order_app/domain/payments/paypal_payment.dart';
 
 class PaymentFactory {
   static Payment create(PaymentType paymentType, double value) {

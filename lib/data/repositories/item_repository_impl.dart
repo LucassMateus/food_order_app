@@ -1,17 +1,21 @@
 import 'package:food_order_app/domain/enums/food_category.dart';
 import 'package:food_order_app/domain/models/item_model.dart';
 import 'package:food_order_app/domain/repositories/item_repository.dart';
+import 'package:result_dart/result_dart.dart';
 
 class ItemRepositoryImpl implements ItemRepository {
   @override
-  Future<ItemModel?> getItem(int id) {
-    return Future.value(items.firstWhere((element) => element.id == id));
+  AsyncResult<ItemModel> getItem(int id) async {
+    try {
+      final item = items.firstWhere((element) => element.id == id);
+      return Success(item);
+    } on Exception catch (e) {
+      return Failure(e);
+    }
   }
 
   @override
-  Future<List<ItemModel>> getItems() {
-    return Future.value(items);
-  }
+  AsyncResult<List<ItemModel>> getItems() async => Success(items);
 }
 
 final List<ItemModel> items = [

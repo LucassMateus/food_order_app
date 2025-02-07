@@ -1,5 +1,6 @@
 import 'package:food_order_app/domain/models/promo_code_model.dart';
 import 'package:food_order_app/domain/repositories/promo_code_repository.dart';
+import 'package:result_dart/result_dart.dart';
 
 class PromoCodeRepositoryImpl implements PromoCodeRepository {
   static final List<PromoCodeModel> _promoCodes = [
@@ -9,16 +10,17 @@ class PromoCodeRepositoryImpl implements PromoCodeRepository {
   ];
 
   @override
-  Future<PromoCodeModel?> getPromoCode(String code) async {
+  AsyncResult<PromoCodeModel> getPromoCode(String code) async {
     try {
-      return _promoCodes.firstWhere((element) => element.code == code);
-    } catch (e) {
-      return null;
+      final promoCode = _promoCodes //
+          .firstWhere((element) => element.code == code);
+      return Success(promoCode);
+    } on Exception {
+      return Failure(Exception('Invalid promo code'));
     }
   }
 
   @override
-  Future<List<PromoCodeModel>> getPromoCodes() {
-    return Future.value(_promoCodes);
-  }
+  AsyncResult<List<PromoCodeModel>> getPromoCodes() async =>
+      Success(_promoCodes);
 }

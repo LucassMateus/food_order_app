@@ -33,9 +33,7 @@ class _CartScreenState extends State<CartScreen> {
         title: Text('Cart', style: context.textStyles.appBarTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context, viewModel.cart.items);
-          },
+          onPressed: () => Navigator.pop(context, viewModel.cart),
         ),
       ),
       body: ListenableBuilder(

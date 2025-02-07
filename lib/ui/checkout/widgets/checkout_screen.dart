@@ -5,10 +5,8 @@ import 'package:food_order_app/ui/checkout/view_model/checkout_view_model.dart';
 import 'package:food_order_app/ui/checkout/widgets/payment_method_option.dart';
 import 'package:food_order_app/ui/checkout/widgets/shipping_option.dart';
 import 'package:food_order_app/ui/core/extensions/double_extension.dart';
-import 'package:food_order_app/ui/core/styles/app_styles.dart';
 import 'package:food_order_app/ui/core/styles/colors_app.dart';
 import 'package:food_order_app/ui/core/styles/text_styles.dart';
-import 'package:food_order_app/ui/core/theme/theme_config.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final CheckoutViewModel viewModel;

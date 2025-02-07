@@ -7,6 +7,7 @@ import 'package:food_order_app/domain/repositories/cart_repository.dart';
 import 'package:food_order_app/domain/repositories/delivery_details_repository.dart';
 import 'package:food_order_app/domain/repositories/promo_code_repository.dart';
 import 'package:food_order_app/domain/use_cases/get_cart_summary_use_case.dart';
+import 'package:food_order_app/domain/use_cases/process_payment_use_case.dart';
 import 'package:food_order_app/ui/cart/view_model/cart_view_model.dart';
 import 'package:food_order_app/ui/checkout/view_model/checkout_view_model.dart';
 import 'package:food_order_app/ui/home/view_model/home_view_model.dart';
@@ -30,6 +31,9 @@ List<SingleChildWidget> providers = [
       deliveryDetailsRepository: context.read(),
     ),
   ),
+  Provider(
+    create: (context) => ProcessPaymentUseCase(cartRepository: context.read()),
+  ),
   ChangeNotifierProvider(
     create: (context) => HomeViewModel(
       itemRepository: context.read(),
@@ -46,6 +50,7 @@ List<SingleChildWidget> providers = [
     create: (context) => CheckoutViewModel(
       addressRepository: context.read(),
       getCartSummaryUseCase: context.read(),
+      processPaymentUseCase: context.read(),
     ),
   )
 ];
