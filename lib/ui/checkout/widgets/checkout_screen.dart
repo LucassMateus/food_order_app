@@ -7,6 +7,7 @@ import 'package:food_order_app/ui/checkout/widgets/shipping_option.dart';
 import 'package:food_order_app/ui/core/extensions/double_extension.dart';
 import 'package:food_order_app/ui/core/styles/colors_app.dart';
 import 'package:food_order_app/ui/core/styles/text_styles.dart';
+import 'package:result_command/result_command.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final CheckoutViewModel viewModel;
@@ -24,6 +25,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       viewModel.addListener(_listener);
+      viewModel.confirmPurchaseCommand.addListener(_commandListener);
       final cart = ModalRoute.of(context)!.settings.arguments as CartModel;
       viewModel.init(cart);
     });
@@ -32,6 +34,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   void dispose() {
     viewModel.removeListener(_listener);
+    viewModel.confirmPurchaseCommand.removeListener(_commandListener);
     super.dispose();
   }
 
@@ -42,13 +45,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         backgroundColor: Colors.red,
       ));
     }
-    if (viewModel.isPaymentSuccessful) {
+  }
+
+  void _commandListener() {
+    if (viewModel.confirmPurchaseCommand.isSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Payment successful'),
         backgroundColor: context.colors.primary,
       ));
 
       Navigator.popUntil(context, (route) => route.isFirst);
+    }
+
+    if (viewModel.confirmPurchaseCommand.isFailure) {
+      final failure = viewModel.confirmPurchaseCommand.value as FailureCommand;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(failure.error.toString()),
+        backgroundColor: Colors.red,
+      ));
     }
   }
 
@@ -202,26 +216,38 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: OutlinedButton(
-                        onPressed: () => viewModel.confirmPurchase(),
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: context.colors.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        child: Text(
-                          'Confirm',
-                          style: context.textStyles.textButtonLabel.copyWith(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                    )
+                    ListenableBuilder(
+                        listenable: viewModel.confirmPurchaseCommand,
+                        builder: (context, _) {
+                          return SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: OutlinedButton(
+                              onPressed:
+                                  viewModel.confirmPurchaseCommand.isRunning
+                                      ? null
+                                      : () => viewModel //
+                                          .confirmPurchaseCommand
+                                          .execute(),
+                              style: OutlinedButton.styleFrom(
+                                backgroundColor: context.colors.primary,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              child: Text(
+                                viewModel.confirmPurchaseCommand.isRunning
+                                    ? 'Processing...'
+                                    : 'Confirm',
+                                style:
+                                    context.textStyles.textButtonLabel.copyWith(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          );
+                        })
                   ],
                 ),
               ),

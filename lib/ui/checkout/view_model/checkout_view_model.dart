@@ -7,6 +7,7 @@ import 'package:food_order_app/domain/repositories/address_repository.dart';
 import 'package:food_order_app/domain/use_cases/get_cart_summary_use_case.dart';
 import 'package:food_order_app/domain/use_cases/process_payment_use_case.dart';
 import 'package:food_order_app/ui/checkout/state/checkout_screen_state.dart';
+import 'package:result_command/result_command.dart';
 import 'package:result_dart/result_dart.dart';
 
 class CheckoutViewModel extends ChangeNotifier {
@@ -23,6 +24,8 @@ class CheckoutViewModel extends ChangeNotifier {
   @protected
   final ProcessPaymentUseCase processPaymentUseCase;
 
+  late final confirmPurchaseCommand = Command0(_confirmPurchase);
+
   CartModel cart = CartModel.empty();
   CartSummaryModel cartSummary = CartSummaryModel.initial();
 
@@ -34,10 +37,7 @@ class CheckoutViewModel extends ChangeNotifier {
   CheckoutScreenState _state = CheckoutScreenState.initial;
   String errorMessage = '';
 
-  bool get isPaymentSuccessful => _state == CheckoutScreenState.paymentSuccess;
-  bool get hasError =>
-      _state == CheckoutScreenState.error ||
-      _state == CheckoutScreenState.paymentError;
+  bool get hasError => _state == CheckoutScreenState.error;
   bool get isLoading => _state == CheckoutScreenState.loading;
   bool get isLoaded => _state == CheckoutScreenState.loaded;
   bool get hasPromoCode => cart.promoCode != null;
@@ -118,10 +118,8 @@ class CheckoutViewModel extends ChangeNotifier {
     await _updateCartSummary(unit).onSuccess(_notifyListenersOnResult);
   }
 
-  Future<void> confirmPurchase() async {
-    _updateState(CheckoutScreenState.loading);
-
-    await processPaymentUseCase(
+  AsyncResult<Unit> _confirmPurchase() async {
+    return processPaymentUseCase(
       paymentType: selectedPaymentMethod,
       paymentValue: cartSummary.total,
     ).fold(_onSuccess, _recover);
