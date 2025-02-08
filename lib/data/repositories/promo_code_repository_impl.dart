@@ -12,11 +12,14 @@ class PromoCodeRepositoryImpl implements PromoCodeRepository {
   @override
   AsyncResult<PromoCodeModel> getPromoCode(String code) async {
     try {
-      final promoCode = _promoCodes //
-          .firstWhere((element) => element.code == code);
+      final promoCode = _promoCodes.firstWhere(
+        (element) => element.code == code,
+        orElse: () => throw Exception('Invalid promo code'),
+      );
+
       return Success(promoCode);
-    } on Exception {
-      return Failure(Exception('Invalid promo code'));
+    } on Exception catch (e) {
+      return Failure(e);
     }
   }
 
