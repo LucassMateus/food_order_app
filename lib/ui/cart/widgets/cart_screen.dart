@@ -5,6 +5,7 @@ import 'package:food_order_app/ui/cart/widgets/promo_code_field.dart';
 import 'package:food_order_app/ui/core/extensions/double_extension.dart';
 import 'package:food_order_app/ui/core/styles/colors_app.dart';
 import 'package:food_order_app/ui/core/styles/text_styles.dart';
+import 'package:food_order_app/utils/diposable_page.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key, required this.viewModel});
@@ -15,7 +16,7 @@ class CartScreen extends StatefulWidget {
   State<CartScreen> createState() => _CartScreenState();
 }
 
-class _CartScreenState extends State<CartScreen> {
+class _CartScreenState extends DiposablePage<CartScreen, CartViewModel> {
   CartViewModel get viewModel => widget.viewModel;
 
   @override
@@ -91,10 +92,19 @@ class _CartScreenState extends State<CartScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    PromoCodeField(
-                      onApply: (code) => viewModel.applyPromoCode(code),
-                      initialValue: viewModel.cart.promoCode?.code,
-                    ),
+                    ListenableBuilder(
+                        listenable: viewModel.applyPromoCodeCommand,
+                        builder: (context, _) {
+                          return PromoCodeField(
+                            onApply: (code) => viewModel //
+                                .applyPromoCodeCommand
+                                .execute(code),
+                            initialValue: viewModel.cart.promoCode?.code,
+                            errorMessage: viewModel.promoCodeError,
+                            isRunning:
+                                viewModel.applyPromoCodeCommand.isRunning,
+                          );
+                        }),
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -131,7 +141,7 @@ class _CartScreenState extends State<CartScreen> {
                         child: Text(
                           'Checkout',
                           style: context.textStyles.textButtonLabel.copyWith(
-                            color: Colors.white,
+                            color: context.colors.secondary,
                             fontSize: 16,
                           ),
                         ),
