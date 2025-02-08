@@ -3,10 +3,18 @@ import 'package:food_order_app/ui/core/styles/colors_app.dart';
 import 'package:food_order_app/ui/core/styles/text_styles.dart';
 
 class PromoCodeField extends StatefulWidget {
-  const PromoCodeField({this.onApply, this.initialValue, super.key});
+  const PromoCodeField({
+    this.onApply,
+    this.initialValue,
+    this.errorMessage,
+    this.isRunning = false,
+    super.key,
+  });
 
   final Function(String)? onApply;
   final String? initialValue;
+  final String? errorMessage;
+  final bool isRunning;
 
   @override
   State<PromoCodeField> createState() => _PromoCodeFieldState();
@@ -24,8 +32,9 @@ class _PromoCodeFieldState extends State<PromoCodeField> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 48,
+      // height: 64,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: TextField(
@@ -41,22 +50,30 @@ class _PromoCodeFieldState extends State<PromoCodeField> {
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
                 ),
+                errorText: widget.errorMessage,
               ),
             ),
           ),
           SizedBox(width: 8),
-          ElevatedButton(
-            onPressed: () => widget.onApply?.call(promoCodeEC.text),
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+          SizedBox(
+            width: 84,
+            height: 54,
+            child: ElevatedButton(
+              onPressed: () => widget.onApply?.call(promoCodeEC.text),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
-            ),
-            child: Text(
-              'Apply',
-              style: context.textStyles.textButtonLabel
-                  .copyWith(color: context.colors.secondary),
+              child: widget.isRunning
+                  ? CircularProgressIndicator(color: context.colors.secondary)
+                  : Text(
+                      'Apply',
+                      style: context.textStyles.textButtonLabel.copyWith(
+                        color: context.colors.secondary,
+                      ),
+                    ),
             ),
           ),
         ],
