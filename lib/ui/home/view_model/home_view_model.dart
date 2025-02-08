@@ -60,7 +60,7 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   Result<Unit> _updateCart(CartModel cart) {
-    this.cart.copyWith(items: cart.items);
+    this.cart.copyWith(items: cart.items, promoCode: cart.promoCode);
     return Success.unit();
   }
 
