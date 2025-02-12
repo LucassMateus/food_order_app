@@ -4,11 +4,17 @@ import 'package:provider/provider.dart';
 
 abstract class DiposablePage<T extends StatefulWidget,
     C extends DisposableProvider> extends State<T> {
-  C get viewModel => context.read<C>();
+  C? _viewModel;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _viewModel ??= context.read<C>();
+  }
 
   @override
   void dispose() {
-    viewModel.disposeValues();
+    _viewModel?.disposeValues();
     super.dispose();
   }
 }
