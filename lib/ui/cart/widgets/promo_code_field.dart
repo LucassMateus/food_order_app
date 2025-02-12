@@ -7,6 +7,7 @@ class PromoCodeField extends StatefulWidget {
     this.onApply,
     this.initialValue,
     this.errorMessage,
+    this.appliedPromoCode,
     this.isRunning = false,
     super.key,
   });
@@ -14,6 +15,7 @@ class PromoCodeField extends StatefulWidget {
   final Function(String)? onApply;
   final String? initialValue;
   final String? errorMessage;
+  final String? appliedPromoCode;
   final bool isRunning;
 
   @override
@@ -32,7 +34,6 @@ class _PromoCodeFieldState extends State<PromoCodeField> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      // height: 64,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
