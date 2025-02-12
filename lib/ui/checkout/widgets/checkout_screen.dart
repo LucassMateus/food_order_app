@@ -5,8 +5,11 @@ import 'package:food_order_app/ui/checkout/view_model/checkout_view_model.dart';
 import 'package:food_order_app/ui/checkout/widgets/payment_method_option.dart';
 import 'package:food_order_app/ui/checkout/widgets/shipping_option.dart';
 import 'package:food_order_app/ui/core/extensions/double_extension.dart';
+import 'package:food_order_app/ui/core/mixins/loader_mixin.dart';
+import 'package:food_order_app/ui/core/mixins/message_mixin.dart';
 import 'package:food_order_app/ui/core/styles/colors_app.dart';
 import 'package:food_order_app/ui/core/styles/text_styles.dart';
+import 'package:food_order_app/utils/diposable_page.dart';
 import 'package:result_command/result_command.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -17,7 +20,9 @@ class CheckoutScreen extends StatefulWidget {
   State<CheckoutScreen> createState() => _CheckoutScreenState();
 }
 
-class _CheckoutScreenState extends State<CheckoutScreen> {
+class _CheckoutScreenState
+    extends DiposablePage<CheckoutScreen, CheckoutViewModel>
+    with LoaderMixin, MessageMixin {
   CheckoutViewModel get viewModel => widget.viewModel;
 
   @override
@@ -40,29 +45,28 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   void _listener() {
     if (viewModel.hasError) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(viewModel.errorMessage),
-        backgroundColor: Colors.red,
-      ));
+      showErrorMessage(viewModel.errorMessage);
+    }
+
+    if (viewModel.paymentState.message.isNotEmpty) {
+      hideLoader();
+      showLoaderWithMessage(viewModel.paymentState.message);
     }
   }
 
   void _commandListener() {
-    if (viewModel.confirmPurchaseCommand.isSuccess) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Payment successful'),
-        backgroundColor: context.colors.primary,
-      ));
+    if (viewModel.confirmPurchaseCommand.isIdle) {
+      hideLoader();
+    }
 
-      Navigator.popUntil(context, (route) => route.isFirst);
+    if (viewModel.confirmPurchaseCommand.isSuccess) {
+      showSuccessMessage('Purchase confirmed!');
+      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     }
 
     if (viewModel.confirmPurchaseCommand.isFailure) {
       final failure = viewModel.confirmPurchaseCommand.value as FailureCommand;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(failure.error.toString()),
-        backgroundColor: Colors.red,
-      ));
+      showErrorMessage(failure.error.toString());
     }
   }
 
