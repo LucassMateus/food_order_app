@@ -3,6 +3,8 @@ import 'package:food_order_app/ui/cart/view_model/cart_view_model.dart';
 import 'package:food_order_app/ui/cart/widgets/cart_food_item_card.dart';
 import 'package:food_order_app/ui/cart/widgets/promo_code_field.dart';
 import 'package:food_order_app/ui/core/extensions/double_extension.dart';
+import 'package:food_order_app/ui/core/mixins/loader_mixin.dart';
+import 'package:food_order_app/ui/core/mixins/message_mixin.dart';
 import 'package:food_order_app/ui/core/styles/colors_app.dart';
 import 'package:food_order_app/ui/core/styles/text_styles.dart';
 import 'package:food_order_app/utils/diposable_page.dart';
@@ -16,7 +18,8 @@ class CartScreen extends StatefulWidget {
   State<CartScreen> createState() => _CartScreenState();
 }
 
-class _CartScreenState extends DiposablePage<CartScreen, CartViewModel> {
+class _CartScreenState extends DiposablePage<CartScreen, CartViewModel>
+    with LoaderMixin, MessageMixin {
   CartViewModel get viewModel => widget.viewModel;
 
   @override
@@ -51,16 +54,18 @@ class _CartScreenState extends DiposablePage<CartScreen, CartViewModel> {
 
           if (viewModel.isLoaded) {
             return SingleChildScrollView(
-              child: Column(children: [
-                ...viewModel.cart.items.map((e) {
-                  return CartFoodItemCard(
-                    cartItemModel: e,
-                    onIncrement: viewModel.updateItemInCart,
-                    onDecrement: viewModel.updateItemInCart,
-                  );
-                }),
-                Padding(padding: EdgeInsets.only(bottom: 300)),
-              ]),
+              child: Column(
+                children: [
+                  ...viewModel.cart.items.map((e) {
+                    return CartFoodItemCard(
+                      cartItemModel: e,
+                      onIncrement: viewModel.updateItemInCart,
+                      onDecrement: viewModel.updateItemInCart,
+                    );
+                  }),
+                  Padding(padding: EdgeInsets.only(bottom: 300)),
+                ],
+              ),
             );
           }
           return const SizedBox();
@@ -101,6 +106,7 @@ class _CartScreenState extends DiposablePage<CartScreen, CartViewModel> {
                                 .execute(code),
                             initialValue: viewModel.cart.promoCode?.code,
                             errorMessage: viewModel.promoCodeError,
+                            appliedPromoCode: viewModel.cart.promoCode?.code,
                             isRunning:
                                 viewModel.applyPromoCodeCommand.isRunning,
                           );
