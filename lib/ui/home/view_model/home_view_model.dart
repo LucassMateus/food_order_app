@@ -33,7 +33,6 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<void> init() async {
     updateState(HomeScreenState.loading);
-
     await Future.delayed(Duration(seconds: 1));
 
     await itemRepository //
@@ -43,8 +42,6 @@ class HomeViewModel extends ChangeNotifier {
         .flatMap(_updateCart)
         .onSuccess((_) => updateState(HomeScreenState.loaded))
         .recover(_recover);
-
-    updateState(HomeScreenState.loaded);
   }
 
   Result<Unit> _recover(Exception e) {
