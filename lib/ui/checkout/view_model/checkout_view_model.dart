@@ -7,10 +7,12 @@ import 'package:food_order_app/domain/repositories/address_repository.dart';
 import 'package:food_order_app/domain/use_cases/get_cart_summary_use_case.dart';
 import 'package:food_order_app/domain/use_cases/process_payment_use_case.dart';
 import 'package:food_order_app/ui/checkout/state/checkout_screen_state.dart';
+import 'package:food_order_app/ui/checkout/state/payment_state.dart';
+import 'package:food_order_app/utils/disposable_provider.dart';
 import 'package:result_command/result_command.dart';
 import 'package:result_dart/result_dart.dart';
 
-class CheckoutViewModel extends ChangeNotifier {
+class CheckoutViewModel extends ChangeNotifier implements DisposableProvider {
   CheckoutViewModel({
     required this.addressRepository,
     required this.getCartSummaryUseCase,
@@ -42,6 +44,8 @@ class CheckoutViewModel extends ChangeNotifier {
   bool get isLoaded => _state == CheckoutScreenState.loaded;
   bool get hasPromoCode => cart.promoCode != null;
   bool get hasPaymentDiscount => cartSummary.paymentDiscount > 0;
+
+  PaymentState paymentState = PaymentState.initial;
 
   Future<void> init(CartModel cart) async {
     _updateState(CheckoutScreenState.loading);
@@ -119,9 +123,44 @@ class CheckoutViewModel extends ChangeNotifier {
   }
 
   AsyncResult<Unit> _confirmPurchase() async {
+    if (selectedPaymentMethod != PaymentType.cash) {
+      paymentState = PaymentState.connectingServer;
+      notifyListeners();
+      await Future.delayed(Duration(seconds: 1));
+    }
+
+    paymentState = PaymentState.processing;
+    notifyListeners();
+    await Future.delayed(Duration(seconds: 1));
     return processPaymentUseCase(
       paymentType: selectedPaymentMethod,
       paymentValue: cartSummary.total,
-    ).fold(_onSuccess, _recover);
+    ).fold(_onPaymentSuccess, _onPaymentError);
+  }
+
+  Result<Unit> _onPaymentSuccess(Unit _) {
+    paymentState = PaymentState.success;
+    notifyListeners();
+
+    return Success(unit);
+  }
+
+  Result<Unit> _onPaymentError(Exception e) {
+    paymentState = PaymentState.error;
+    errorMessage = e.toString();
+    notifyListeners();
+
+    return Success(unit);
+  }
+
+  @override
+  void disposeValues() {
+    cart = CartModel.empty();
+    cartSummary = CartSummaryModel.initial();
+    address.clear();
+    selectedShippingAddress = null;
+    selectedPaymentMethod = PaymentType.cash;
+    paymentState = PaymentState.initial;
+    errorMessage = '';
   }
 }
