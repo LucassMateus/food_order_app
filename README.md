@@ -39,7 +39,7 @@ Tratamento de erros.
     - **Data layer:** Gerencia interações com fontes de dados, como bancos de dados ou plugins de plataforma. Expõe dados e métodos à camada de lógica de negócios.
 
 
-- Para mais informações sobre essa arquitetura: [Common architecture concepts](https://https://docs.flutter.dev/app-architecture/concepts)
+- Para mais informações sobre essa arquitetura: [Common architecture concepts](https://docs.flutter.dev/app-architecture/concepts)
 
     **Forma de uso no app**
     ![ARQUITETURA EM CAMADAS: Exemplo de uso](https://docs.flutter.dev/assets/images/docs/app-architecture/guide/feature-architecture-simplified-with-logic-layer.png)
